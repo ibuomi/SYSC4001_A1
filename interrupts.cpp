@@ -19,55 +19,98 @@ int main(int argc, char** argv) {
     std::string execution;  //!< string to accumulate the execution output
 
     /******************ADD YOUR VARIABLES HERE*************************/
-    // Customizable parameters for experiments
-    int context_save_time = 10; // Change for analysis
-    int isr_activity_time = 40; // Change for analysis
     int current_time = 0;
-    // Lambda for logging events
-    auto log_event = [](int time, int duration, const std::string& desc) {
-        return std::to_string(time) + ", " + std::to_string(duration) + ", " + desc + "\n";
-    };
+    int context_save_time = 10;  // Context switch time in ms (modify for experiments)
+    
+    // Statistics tracking
+    int total_cpu_time = 0;
+    int total_interrupt_overhead = 0;
+    int total_isr_execution = 0;
+    int interrupt_count = 0;
     /******************************************************************/
 
-    // Parse each line of the input trace file
-    while (std::getline(input_file, trace)) {
+    //parse each line of the input trace file
+    while(std::getline(input_file, trace)) {
         auto [activity, duration_intr] = parse_trace(trace);
 
         /******************ADD YOUR SIMULATION CODE HERE*************************/
-        if (activity == "CPU") {
-            execution += log_event(current_time, duration_intr, "CPU burst executed");
+
+if (activity == "CPU") {
+            // CPU burst - normal execution in user mode
+            execution += std::to_string(current_time) + ", " + 
+                        std::to_string(duration_intr) + ", CPU execution\n";
             current_time += duration_intr;
-        } else if (activity == "SYSCALL" || activity == "END_IO") {
-            // Interrupt simulation steps
-            int device_num = duration_intr;
-            // Boilerplate: kernel mode, context save, vector lookup, load ISR
-            auto [boilerplate, after_boilerplate_time] = intr_boilerplate(current_time, device_num, context_save_time, vectors);
-            execution += boilerplate;
-            int time_spent = after_boilerplate_time - current_time;
-            current_time = after_boilerplate_time;
-
-            // Device delay from table
-            int device_delay = (device_num < delays.size()) ? delays[device_num] : 100;
-            int isr_total = device_delay - time_spent - 1; // -1 for IRET
-            if (isr_total < isr_activity_time) isr_total = isr_activity_time; // Ensure minimum
-
-            // Unique ISR event wording
-            std::string isr_desc = (activity == "SYSCALL") ? "ISR: device driver routine" : "ISR: finalize I/O for device";
-            execution += log_event(current_time, isr_total, isr_desc);
-            current_time += isr_total;
-
-            // IRET step
-            execution += log_event(current_time, 1, "Return from interrupt (IRET)");
-            current_time += 1;
-        } else {
-            // Unknown activity, log for debugging
-            execution += log_event(current_time, 1, "Unknown activity: " + activity);
-            current_time += 1;
+            total_cpu_time += duration_intr;
         }
+        else if (activity == "SYSCALL") {
+            // System call interrupt - initiates I/O operation
+            int device_num = duration_intr;
+            interrupt_count++;
+            
+            // Execute interrupt boilerplate (mode switch, save context, find vector, load ISR)
+            auto [intr_exec, new_time] = intr_boilerplate(current_time, device_num, 
+                                                          context_save_time, vectors);
+            execution += intr_exec;
+            total_interrupt_overhead += (new_time - current_time);
+            current_time = new_time;
+            
+            // Execute ISR body - device driver initiates I/O
+            int isr_duration = delays[device_num];
+            execution += std::to_string(current_time) + ", " + std::to_string(isr_duration) 
+                        + ", SYSCALL: run the ISR\n";
+            current_time += isr_duration;
+            total_isr_execution += isr_duration;
+            
+            // Return from interrupt (IRET)
+            execution += std::to_string(current_time) + ", " + std::to_string(1) + ", IRET\n";
+            current_time++;
+            total_interrupt_overhead++;
+        }
+        else if (activity == "END_IO") {
+            // I/O completion interrupt - device signals operation finished
+            int device_num = duration_intr;
+            interrupt_count++;
+            
+            // Execute interrupt boilerplate
+            auto [intr_exec, new_time] = intr_boilerplate(current_time, device_num, 
+                                                          context_save_time, vectors);
+            execution += intr_exec;
+            total_interrupt_overhead += (new_time - current_time);
+            current_time = new_time;
+            
+            // Execute ISR body - device driver handles I/O completion
+            int isr_duration = delays[device_num];
+            execution += std::to_string(current_time) + ", " + std::to_string(isr_duration) 
+                        + ", END_IO: run the ISR\n";
+            current_time += isr_duration;
+            total_isr_execution += isr_duration;
+            
+            // Return from interrupt (IRET)
+            execution += std::to_string(current_time) + ", " + std::to_string(1) + ", IRET\n";
+            current_time++;
+            total_interrupt_overhead++;
+        }
+
         /************************************************************************/
+
     }
 
     input_file.close();
+
+    execution += "\n=== SIMULATION SUMMARY ===\n";
+    execution += "Total simulation time: " + std::to_string(current_time) + " ms\n";
+    execution += "Total CPU time: " + std::to_string(total_cpu_time) + " ms (" 
+                + std::to_string(100.0 * total_cpu_time / current_time) + "%)\n";
+    execution += "Total interrupt overhead: " + std::to_string(total_interrupt_overhead) + " ms ("
+                + std::to_string(100.0 * total_interrupt_overhead / current_time) + "%)\n";
+    execution += "Total ISR execution: " + std::to_string(total_isr_execution) + " ms ("
+                + std::to_string(100.0 * total_isr_execution / current_time) + "%)\n";
+    execution += "Number of interrupts: " + std::to_string(interrupt_count) + "\n";
+    execution += "Average time per interrupt: " 
+                + std::to_string((total_interrupt_overhead + total_isr_execution) / (double)interrupt_count) + " ms\n";
+
+
     write_output(execution);
+
     return 0;
 }
