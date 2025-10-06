@@ -1,0 +1,71 @@
+0, 75, CPU burst executed
+75, 1, switch to kernel mode
+76, 10, context saved
+86, 1, find vector 5 in memory position 0x000A
+87, 1, load address 0X048B into the PC
+88, 197, ISR: device driver routine
+285, 1, Return from interrupt (IRET)
+286, 84, CPU burst executed
+370, 1, switch to kernel mode
+371, 10, context saved
+381, 1, find vector 5 in memory position 0x000A
+382, 1, load address 0X048B into the PC
+383, 197, ISR: finalize I/O for device
+580, 1, Return from interrupt (IRET)
+581, 22, CPU burst executed
+603, 1, switch to kernel mode
+604, 10, context saved
+614, 1, find vector 10 in memory position 0x0014
+615, 1, load address 0X07B0 into the PC
+616, 550, ISR: device driver routine
+1166, 1, Return from interrupt (IRET)
+1167, 80, CPU burst executed
+1247, 1, switch to kernel mode
+1248, 10, context saved
+1258, 1, find vector 10 in memory position 0x0014
+1259, 1, load address 0X07B0 into the PC
+1260, 550, ISR: finalize I/O for device
+1810, 1, Return from interrupt (IRET)
+1811, 79, CPU burst executed
+1890, 1, switch to kernel mode
+1891, 10, context saved
+1901, 1, find vector 6 in memory position 0x000C
+1902, 1, load address 0X0639 into the PC
+1903, 251, ISR: device driver routine
+2154, 1, Return from interrupt (IRET)
+2155, 68, CPU burst executed
+2223, 1, switch to kernel mode
+2224, 10, context saved
+2234, 1, find vector 6 in memory position 0x000C
+2235, 1, load address 0X0639 into the PC
+2236, 251, ISR: finalize I/O for device
+2487, 1, Return from interrupt (IRET)
+2488, 71, CPU burst executed
+2559, 1, switch to kernel mode
+2560, 10, context saved
+2570, 1, find vector 4 in memory position 0x0008
+2571, 1, load address 0X0292 into the PC
+2572, 236, ISR: device driver routine
+2808, 1, Return from interrupt (IRET)
+2809, 97, CPU burst executed
+2906, 1, switch to kernel mode
+2907, 10, context saved
+2917, 1, find vector 4 in memory position 0x0008
+2918, 1, load address 0X0292 into the PC
+2919, 236, ISR: finalize I/O for device
+3155, 1, Return from interrupt (IRET)
+3156, 84, CPU burst executed
+3240, 1, switch to kernel mode
+3241, 10, context saved
+3251, 1, find vector 7 in memory position 0x000E
+3252, 1, load address 0X00BD into the PC
+3253, 138, ISR: device driver routine
+3391, 1, Return from interrupt (IRET)
+3392, 38, CPU burst executed
+3430, 1, switch to kernel mode
+3431, 10, context saved
+3441, 1, find vector 7 in memory position 0x000E
+3442, 1, load address 0X00BD into the PC
+3443, 138, ISR: finalize I/O for device
+3581, 1, Return from interrupt (IRET)
+3582, 90, CPU burst executed
